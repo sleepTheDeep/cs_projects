@@ -20,6 +20,8 @@ tile_size = 6
 end_game = False
 calc_game_over = [0, ""]
 current_turn = "#c2c2c2"
+wking_check = False
+bking_check = False
 #end game
 def game_end(colour):
     for tile_y in range(8):
@@ -73,6 +75,18 @@ def pawn_functions():
                 current_tile.configure(command="", fg="red")
             tile_list[tile_y][tile_x].configure(bg=colour_list[tile_y][tile_x])
 #pawn movement logic
+def show_turn(check_kings):
+    for tile_y in range(8):
+        for tile_x in range(8):
+            if tile_list[tile_y][tile_x]["text"] == "♚" and tile_list[tile_y][tile_x]["fg"] == "#c2c2c2":
+                check_kings[0] += 1
+            if tile_list[tile_y][tile_x]["text"] == "♚" and tile_list[tile_y][tile_x]["fg"] == "#000000":
+                check_kings[1] += 1
+            if tile_list[tile_y][tile_x]["text"] == "♚" and tile_list[tile_y][tile_x]["fg"] == current_turn:
+                tile_list[tile_y][tile_x].configure(bg="purple")
+#START WORKING ON CHECK FOR CHECK HERE ------------------------------------------------------------------------
+def check_for_check():
+    movement = []
 def view_pawn(pawn_type, pawn_pos, pawn_colour):
     for tile_y in range(8):
         for tile_x in range(8):
@@ -85,20 +99,24 @@ def view_pawn(pawn_type, pawn_pos, pawn_colour):
             opposing_colour = "#c2c2c2"
         if pawn_type == "pawn":
             if pawn_colour == "#c2c2c2":
-                movement = -1
+                movement = [[-1, 0], [-1, 1], [-1, -1]]
             else:
-                movement = 1
-            if 0 <= pawn_pos[0]-1 < 8:
-                if tile_list[pawn_pos[0]+movement][pawn_pos[1]+0]["text"] == "":
-                    tile_list[pawn_pos[0]+movement][pawn_pos[1]].configure(bg="blue", command=lambda: move_pawn([pawn_pos[0], pawn_pos[1]], [pawn_pos[0]+movement, pawn_pos[1]], "♟", func_colour))
-                    if 0 <= pawn_pos[0]-1 < 8 and (pawn_pos[0] == 6 or pawn_pos[0] == 1):
-                        tile_list[pawn_pos[0]+movement*2][pawn_pos[1]].configure(bg="blue", command=lambda: move_pawn([pawn_pos[0], pawn_pos[1]], [pawn_pos[0]+movement*2, pawn_pos[1]], "♟", func_colour))
+                movement = [[1, 0], [1, 1], [1, -1]]
+            for move in movement:
+                if 0 <= pawn_pos[0]+move[0] < 8 and 0 <= pawn_pos[1]+move[1] < 8:
+                    if tile_list[pawn_pos[0]+move[0]][pawn_pos[1]+0]["text"] == "" and move in [[1, 0], [-1, 0]]:
+                        tile_list[pawn_pos[0]+move[0]][pawn_pos[1]].configure(bg="blue", command=lambda: move_pawn([pawn_pos[0], pawn_pos[1]], [pawn_pos[0]+move[0], pawn_pos[1]], "♟", func_colour))
+                        if 0 <= pawn_pos[0]+move[0] < 8 and (pawn_pos[0] == 6 or pawn_pos[0] == 1):
+                            tile_list[pawn_pos[0]+move[0]*2][pawn_pos[1]].configure(bg="blue", command=lambda: move_pawn([pawn_pos[0], pawn_pos[1]], [pawn_pos[0]+move[0]*2, pawn_pos[1]], "♟", func_colour))
+                    if tile_list[pawn_pos[0]+move[0]][pawn_pos[1]+move[1]]["fg"] == opposing_colour and move in [[-1, 1], [-1, -1], [1, 1], [1, -1]]:
+                        tile_list[pawn_pos[0] + move[0]][pawn_pos[1] + move[1]].configure(bg="blue", command=lambda pos_y=pawn_pos[0], pos_x=pawn_pos[1], move_y=move[0], move_x=move[1]: move_pawn( [pos_y, pos_x], [pos_y + move_y, pos_x + move_x], "♟", func_colour))
         if pawn_type == "knight":
             movement = [[-2, -1], [-2, 1], [2, 1], [2, -1], [-1, -2], [1, -2], [1, 2], [-1, 2]]
             for move in movement:
                 if 0 <= pawn_pos[0]+move[0] < 8 and 0 <= pawn_pos[1]+move[1] < 8:
                     if tile_list[pawn_pos[0]+move[0]][pawn_pos[1]+move[1]]["fg"] != func_colour:
                         tile_list[pawn_pos[0]+move[0]][pawn_pos[1]+move[1]].configure(bg="blue", command=lambda pos_y = pawn_pos[0], pos_x = pawn_pos[1], move_y = move[0], move_x = move[1]: move_pawn([pos_y, pos_x], [pos_y+move_y, pos_x+move_x], "♞", func_colour))
+
         if pawn_type == "bishop":
             movement = [[1, 1], [-1, -1], [-1, 1], [1, -1]]
             for move in movement:
@@ -152,12 +170,7 @@ def move_pawn(old_pos, new_pos, pawn, colour):
         current_turn = "#000000"
     else:
         current_turn = "#c2c2c2"
-    for tile_y in range(8):
-        for tile_x in range(8):
-            if tile_list[tile_y][tile_x]["text"] == "♚" and tile_list[tile_y][tile_x]["fg"] == "#c2c2c2":
-                check_kings[0] += 1
-            if tile_list[tile_y][tile_x]["text"] == "♚" and tile_list[tile_y][tile_x]["fg"] == "#000000":
-                check_kings[1] += 1
+    show_turn(check_kings)
     if check_kings == [1, 0]:
         end_game = True
         game_end("#c2c2c2")
@@ -190,6 +203,6 @@ def assign_pawns(pawn_pos, knight_pos, bishop_pos, rook_pos, queen_pos, king_pos
 #assigning pawn placements for black and white pieces using the assign_pawn function
 assign_pawns([0, 1], [1, 0], [2, 0], [0, 0], [3, 0], [4, 0], "B")
 assign_pawns([0, 6], [1, 7], [2, 7], [0, 7], [3, 7], [4, 7], "W")
-
+show_turn([0, 0])
 #start the game
 chess_window.mainloop()
