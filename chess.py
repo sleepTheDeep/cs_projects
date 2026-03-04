@@ -29,6 +29,8 @@ wking_castle_king = False
 wking_castle_queen = False
 bking_castle_king = False
 bking_castle_queen = False
+white_text =[""]
+black_text =[""]
 #end game
 def game_end(colour):
     for tile_y in range(8):
@@ -63,10 +65,10 @@ for rows in range(8):
         current_colour += 1
 move_label = tk.Label(chess_window, text="Moves:")
 move_label.place(x=695, y=10)
-move_label_white = tk.Label(chess_window, text="W: ", font=("Segoe UI Symbol", 20))
-move_label_white.place(x=670, y=90)
-move_label_black = tk.Label(chess_window, text="B:  ", font=("Segoe UI Symbol", 20))
-move_label_black.place(x=670, y=180)
+move_label_white = tk.Label(chess_window, text="W:", font=("Segoe UI Symbol", 15))
+move_label_white.place(x=660, y=50)
+move_label_black = tk.Label(chess_window, text="B:", font=("Segoe UI Symbol", 15))
+move_label_black.place(x=720, y=50)
 #assign pawn functions after movement / at start
 def pawn_functions():
     for tile_y in range(8):
@@ -218,10 +220,6 @@ def move_pawn(old_pos, new_pos, pawn, colour):
     pawn_letter = ""
     row_to_letter = ["a", "b", "c", "d", "e", "f", "g", "h"]
     display_colour = ""
-    if colour == "#c2c2c2":
-        display_colour = "W: "
-    if colour == "#000000":
-        display_colour = "B:  "
     if pawn == "♟":
         pawn_letter = ""
     if pawn == "♞":
@@ -235,27 +233,35 @@ def move_pawn(old_pos, new_pos, pawn, colour):
     if pawn == "♚":
         if castles[1][1] or castles[0][1]:
             if colour == "#c2c2c2":
-                move_label_white.configure(text=f"{display_colour}0-0")
+                white_text.append(f"0-0")
             if colour == "#000000":
-                move_label_black.configure(text=f"{display_colour}0-0")
+                black_text.append(f"0-0")
         if castles[1][0] or castles[0][0]:
             if colour == "#c2c2c2":
-                move_label_white.configure(text=f"{display_colour}0-0-0")
+                white_text.append(f"0-0-0")
             if colour == "#000000":
-                move_label_black.configure(text=f"{display_colour}0-0-0")
+                black_text.append(f"0-0-0")
         else:
             pawn_letter = "K"
     if not castles[0][0] and not castles[1][0] and not castles[1][1] and not castles[0][1]:
         if tile_list[new_pos[0]+0][new_pos[1]+0]["text"] == "":
             if colour == "#c2c2c2":
-                move_label_white.configure(text=f"{display_colour}{pawn_letter}{row_to_letter[new_pos[1]]}{new_pos[0]}")
+                white_text.append(f"{pawn_letter}{row_to_letter[new_pos[1]]}{new_pos[0]}")
             if colour == "#000000":
-                move_label_black.configure(text=f"{display_colour}{pawn_letter}{row_to_letter[new_pos[1]]}{new_pos[0]}")
+                black_text.append(f"{pawn_letter}{row_to_letter[new_pos[1]]}{new_pos[0]}")
         else:
             if colour == "#c2c2c2":
-                move_label_white.configure(text=f"{display_colour}{pawn_letter}{row_to_letter[old_pos[1]]}x{row_to_letter[new_pos[1]]}{new_pos[0]}")
+                white_text.append(f"{pawn_letter}{row_to_letter[old_pos[1]]}x{row_to_letter[new_pos[1]]}{new_pos[0]}")
             if colour == "#000000":
-                move_label_black.configure(text=f"{display_colour}{pawn_letter}{row_to_letter[old_pos[1]]}x{row_to_letter[new_pos[1]]}{new_pos[0]}")
+                black_text.append(f"{pawn_letter}{row_to_letter[old_pos[1]]}x{row_to_letter[new_pos[1]]}{new_pos[0]}")
+    wdis = "W:"
+    bdis = "B:"
+    for n in white_text:
+        wdis += f"{n}\n"
+        move_label_white.configure(text=wdis)
+    for n in black_text:
+        bdis += f"{n}\n"
+        move_label_black.configure(text=bdis)
     #update board
     check_kings = [0, 0]
     tile_list[old_pos[0]][old_pos[1]].configure(text="", bg=colour_list[old_pos[1]][old_pos[0]])
