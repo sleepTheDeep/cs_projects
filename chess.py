@@ -112,33 +112,33 @@ def check_for_check(pawn_pos, func_colour):
         opposing_colour = "#000000"
     else:
         opposing_colour = "#c2c2c2"
+    def assign_check():
+        global bking_check, wking_check
+        if opposing_colour == "#000000":
+            bking_check = True
+        if opposing_colour == "#c2c2c2":
+            wking_check = True
     for move in movement_rows:
         for n in range(1, 8):
             if 0 <= pawn_pos[0] + move[0] * n < 8 and 0 <= pawn_pos[1] + move[1] * n < 8:
                 if tile_list[pawn_pos[0] + move[0] * n][pawn_pos[1] + move[1] * n]["fg"] == func_colour:
                     break
-                if tile_list[pawn_pos[0]+move[0]*n][pawn_pos[1]+move[1]*n]["fg"] == opposing_colour and tile_list[pawn_pos[0]+move[0]*n][pawn_pos[1]+move[1]*n]["text"] in ["♝", "♜", "♛"]:
-                    if opposing_colour == "#000000":
-                        bking_check = True
-                    if opposing_colour == "#c2c2c2":
-                        wking_check = True
+                if tile_list[pawn_pos[0] + move[0] * n][pawn_pos[1] + move[1] * n]["fg"] == opposing_colour and tile_list[pawn_pos[0] + move[0] * n][pawn_pos[1] + move[1] * n]["text"] in ["♝", "♛"] and move in [[1, 1], [-1, -1], [-1, 1], [1, -1]]:
+                    assign_check()
+                    break
+                if tile_list[pawn_pos[0] + move[0] * n][pawn_pos[1] + move[1] * n]["fg"] == opposing_colour and tile_list[pawn_pos[0] + move[0] * n][pawn_pos[1] + move[1] * n]["text"] in ["♜", "♛"] and move in [[0, 1], [0, -1], [-1, 0], [1, 0]]:
+                    assign_check()
                     break
     movement_knight = [[-2, -1], [-2, 1], [2, 1], [2, -1], [-1, -2], [1, -2], [1, 2], [-1, 2]]
     for move in movement_knight:
         if 0 <= pawn_pos[0] + move[0] < 8 and 0 <= pawn_pos[1] + move[1] < 8:
             if tile_list[pawn_pos[0]+move[0]+0][pawn_pos[1]+move[1]+0]["fg"] == opposing_colour and tile_list[pawn_pos[0]+move[0]][pawn_pos[1]+move[1]]["text"] in ["♞"]:
-                if opposing_colour == "#000000":
-                    bking_check = True
-                if opposing_colour == "#c2c2c2":
-                    wking_check = True
+                assign_check()
     movement_pawn = [[-1, 1], [-1, -1], [1, 1], [1, -1]]
     for move in movement_pawn:
         if 0 <= pawn_pos[0] + move[0] < 8 and 0 <= pawn_pos[1] + move[1] < 8:
             if tile_list[pawn_pos[0]+move[0]+0][pawn_pos[1]+move[1]+0]["fg"] == opposing_colour and tile_list[pawn_pos[0]+move[0]][pawn_pos[1]+move[1]]["text"] in ["♟"]:
-                if opposing_colour == "#000000":
-                    bking_check = True
-                if opposing_colour == "#c2c2c2":
-                    wking_check = True
+                assign_check()
 def view_pawn(pawn_type, pawn_pos, pawn_colour):
     global castles
     for tile_y in range(8):
@@ -243,6 +243,10 @@ def move_pawn(old_pos, new_pos, pawn, colour):
                 black_text.append(f"0-0-0")
         else:
             pawn_letter = "K"
+            if colour == "#c2c2c2":
+                wking_move = True
+            if colour == "#000000":
+                bking_move = True
     if not castles[0][0] and not castles[1][0] and not castles[1][1] and not castles[0][1]:
         if tile_list[new_pos[0]+0][new_pos[1]+0]["text"] == "":
             if colour == "#c2c2c2":
@@ -251,9 +255,9 @@ def move_pawn(old_pos, new_pos, pawn, colour):
                 black_text.append(f"{pawn_letter}{row_to_letter[new_pos[1]]}{new_pos[0]}")
         else:
             if colour == "#c2c2c2":
-                white_text.append(f"{pawn_letter}{row_to_letter[old_pos[1]]}x{row_to_letter[new_pos[1]]}{new_pos[0]}")
+                white_text.append(f"{pawn_letter}{row_to_letter[old_pos[1]]}x{row_to_letter[new_pos[1]]}{new_pos[0]+1}")
             if colour == "#000000":
-                black_text.append(f"{pawn_letter}{row_to_letter[old_pos[1]]}x{row_to_letter[new_pos[1]]}{new_pos[0]}")
+                black_text.append(f"{pawn_letter}{row_to_letter[old_pos[1]]}x{row_to_letter[new_pos[1]]}{new_pos[0]+1}")
     wdis = "W:"
     bdis = "B:"
     for n in white_text:
@@ -267,19 +271,19 @@ def move_pawn(old_pos, new_pos, pawn, colour):
     tile_list[old_pos[0]][old_pos[1]].configure(text="", bg=colour_list[old_pos[1]][old_pos[0]])
     tile_list[new_pos[0]][new_pos[1]].configure(text=pawn, bg=colour_list[new_pos[1]][new_pos[0]], fg=colour)
     #check for castle
-    if castles[1][1]:
+    if castles[1][1] and not wking_move:
         tile_list[7][7].configure(text="", bg=colour_list[7][7], command="")
         tile_list[7][5].configure(text="♜", bg=colour_list[7][5], fg="#c2c2c2")
         castles[1][1] = False
-    if castles[1][0]:
+    if castles[1][0] and not wking_move:
         tile_list[7][0].configure(text="", bg=colour_list[7][7], command="")
         tile_list[7][3].configure(text="♜", bg=colour_list[7][5], fg="#c2c2c2")
         castles[1][0] = False
-    if castles[0][1]:
+    if castles[0][1] and not bking_move:
         tile_list[0][7].configure(text="", bg=colour_list[7][7], command="")
         tile_list[0][5].configure(text="♜", bg=colour_list[7][5], fg="#000000")
         castles[0][1] = False
-    if castles[0][0]:
+    if castles[0][0] and not bking_move:
         tile_list[0][0].configure(text="", bg=colour_list[7][7], command="")
         tile_list[0][3].configure(text="♜", bg=colour_list[7][5], fg="#000000")
         castles[0][0] = False
