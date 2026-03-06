@@ -300,6 +300,8 @@ def move_pawn(old_pos, new_pos, pawn, colour):
     pawn_notation()
     #update board
     check_kings = [0, 0]
+    old_text = tile_list[new_pos[0]][new_pos[1]]["text"]
+    old_colour = tile_list[new_pos[0]][new_pos[1]]["fg"]
     tile_list[old_pos[0]][old_pos[1]].configure(text="", bg=colour_list[old_pos[1]][old_pos[0]])
     tile_list[new_pos[0]][new_pos[1]].configure(text=pawn, bg=colour_list[new_pos[1]][new_pos[0]], fg=colour)
     #check for castle
@@ -332,7 +334,7 @@ def move_pawn(old_pos, new_pos, pawn, colour):
     #displays turn + check
     if colour == "#c2c2c2":
         if bking_check:
-            tile_list[new_pos[0]][new_pos[1]].configure(text="", bg=colour_list[old_pos[1]][old_pos[0]])
+            tile_list[new_pos[0]][new_pos[1]].configure(text=old_text, bg=colour_list[old_pos[1]][old_pos[0]], fg=old_colour)
             tile_list[old_pos[0]][old_pos[1]].configure(text=pawn, bg=colour_list[new_pos[1]][new_pos[0]], fg=colour)
             pawn_functions()
             white_text.pop()
@@ -340,7 +342,7 @@ def move_pawn(old_pos, new_pos, pawn, colour):
             current_turn = "#000000"
     else:
         if wking_check:
-            tile_list[new_pos[0]][new_pos[1]].configure(text="", bg=colour_list[old_pos[1]][old_pos[0]])
+            tile_list[new_pos[0]][new_pos[1]].configure(text=old_text, bg=colour_list[old_pos[1]][old_pos[0]], fg=old_colour)
             tile_list[old_pos[0]][old_pos[1]].configure(text=pawn, bg=colour_list[new_pos[1]][new_pos[0]], fg=colour)
             pawn_functions()
             black_text.pop()
