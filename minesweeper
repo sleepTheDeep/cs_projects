@@ -1,0 +1,113 @@
+from random import randint
+
+#create the grid
+letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+cord_x = 0
+cord_y = 1
+count = 0
+grid_length = None
+game_over = [False, ""]
+while grid_length is None:
+    try:
+        grid_length = int(input("Grid length: "))
+    except ValueError:
+        print("Enter a number GODDAMMIT!!")
+bomb_count = None
+while bomb_count is None:
+    try:
+        bomb_count = int(input("Grid length: "))
+        squares_left = grid_length*grid_length - bomb_count
+    except ValueError:
+        print("Enter a number GODDAMMIT!!")
+grid = []
+for tile_y in range(grid_length):
+    grid.append([])
+    for tile_x in range(grid_length):
+        grid[tile_y].append([0, f"{letters[cord_x]}{cord_y}", "unfound"])
+        if tile_y == grid_length-1 and tile_x == grid_length-1:
+            #max len used for formatting
+            max_len = len(grid[tile_y][tile_x][1])
+        count += 1
+        cord_x += 1
+        if count % 26 == 0:
+            cord_y += 1
+            cord_x = 0
+#assign bombs and numbers
+for tile in range(grid_length*grid_length):
+    bomb_x = randint(0, grid_length-1)
+    bomb_y = randint(0, grid_length-1)
+    if grid[bomb_y][bomb_x][0] != "X":
+        grid[bomb_y][bomb_x][0] = "X"
+        bomb_count -= 1
+    if bomb_count == 0:
+        break
+for tile_y in range(grid_length):
+    for tile_x in range(grid_length):
+        def check_for_bombs(idx_x, idx_y):
+            if 0 <= tile_x+idx_x < grid_length and 0 <= tile_y+idx_y < grid_length:
+                if grid[tile_y+idx_y][tile_x+idx_x][0] == "X" and grid[tile_y][tile_x][0] != "X":
+                    grid[tile_y][tile_x][0] += 1
+        #up, down, left, right
+        check_for_bombs(0, 1)
+        check_for_bombs(0, -1)
+        check_for_bombs(1, 0)
+        check_for_bombs(-1, 0)
+        #top left, top right, bottom left, bottom right
+        check_for_bombs(1, 1)
+        check_for_bombs(-1, 1)
+        check_for_bombs(1, -1)
+        check_for_bombs(-1, -1)
+def print_grid():
+    for square_y in range(grid_length):
+        print()
+        for square_x in range(grid_length):
+            if grid[square_y][square_x][2] == "unfound":
+                print(grid[square_y][square_x][1], end=" " + (max_len-len(grid[square_y][square_x][1]))*" ")
+            else:
+                print(grid[square_y][square_x][0], end="  " + (max_len-len(str(grid[square_y][square_x][0]))-1)*" ")
+print_grid()
+def flood_fill():
+    global flood_list, squares_left, game_over
+    for cord in flood_list:
+        def add_to_fill(idx):
+            global grid_length
+            if idx not in flood_list and grid_length > idx[0] >= 0 and grid_length > idx[1] >= 0 and grid[idx[1]][idx[0]][0] != "X":
+                flood_list.append(idx)
+        # flood fill
+        if grid[cord[1]][cord[0]][0] == 0:
+            add_to_fill([cord[0] + 1, cord[1]])
+            add_to_fill([cord[0] - 1, cord[1]])
+            add_to_fill([cord[0], cord[1] + 1])
+            add_to_fill([cord[0], cord[1] - 1])
+            add_to_fill([cord[0] + 1, cord[1] + 1])
+            add_to_fill([cord[0] - 1, cord[1] + 1])
+            add_to_fill([cord[0] + 1, cord[1] - 1])
+            add_to_fill([cord[0] - 1, cord[1] - 1])
+    # update squares_left and reveal flood fill list
+    for cord in flood_list:
+        if grid[cord[1]][cord[0]][2] != "found":
+            grid[cord[1]][cord[0]][2] = "found"
+            squares_left -= 1
+            if squares_left == 0:
+                game_over = [True, "win"]
+        else:
+            pass
+while not game_over[0]:
+    guess = input("\nguess: ").upper()
+    for tile_y in range(grid_length):
+        for tile_x in range(grid_length):
+            if guess == grid[tile_y][tile_x][1]:
+                if grid[tile_y][tile_x][0] != "X":
+                    grid[tile_y][tile_x][2] = "found"
+                    squares_left -= 1
+                    flood_list = [[tile_x, tile_y]]
+                    flood_fill()
+                else:
+                    grid[tile_y][tile_x][2] = "found"
+                    game_over = [True, "lose"]
+    print_grid()
+
+if game_over[1] == "win":
+    print("\nwin")
+else:
+    print("\nlose")
