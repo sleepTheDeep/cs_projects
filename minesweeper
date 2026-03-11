@@ -1,7 +1,8 @@
+import tkinter as tk
 from random import randint
 
-#create the grid
-letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+minesweeper_grid = tk.Tk()
+minesweeper_grid.title("Minesweeper")
 cord_x = 0
 cord_y = 1
 count = 0
@@ -19,53 +20,22 @@ while bomb_count is None:
         squares_left = grid_length*grid_length - bomb_count
     except ValueError:
         print("Enter a number GODDAMMIT!!")
-grid = []
+colour_list = []
+flood_list = []
 for tile_y in range(grid_length):
-    grid.append([])
+    colour_list.append([])
     for tile_x in range(grid_length):
-        grid[tile_y].append([0, f"{letters[cord_x]}{cord_y}", "unfound"])
-        if tile_y == grid_length-1 and tile_x == grid_length-1:
-            #max len used for formatting
-            max_len = len(grid[tile_y][tile_x][1])
-        count += 1
-        cord_x += 1
-        if count % 26 == 0:
-            cord_y += 1
-            cord_x = 0
-#assign bombs and numbers
-for tile in range(grid_length*grid_length):
-    bomb_x = randint(0, grid_length-1)
-    bomb_y = randint(0, grid_length-1)
-    if grid[bomb_y][bomb_x][0] != "X":
-        grid[bomb_y][bomb_x][0] = "X"
-        bomb_count -= 1
-    if bomb_count == 0:
-        break
-for tile_y in range(grid_length):
-    for tile_x in range(grid_length):
-        def check_for_bombs(idx_x, idx_y):
-            if 0 <= tile_x+idx_x < grid_length and 0 <= tile_y+idx_y < grid_length:
-                if grid[tile_y+idx_y][tile_x+idx_x][0] == "X" and grid[tile_y][tile_x][0] != "X":
-                    grid[tile_y][tile_x][0] += 1
-        #up, down, left, right
-        check_for_bombs(0, 1)
-        check_for_bombs(0, -1)
-        check_for_bombs(1, 0)
-        check_for_bombs(-1, 0)
-        #top left, top right, bottom left, bottom right
-        check_for_bombs(1, 1)
-        check_for_bombs(-1, 1)
-        check_for_bombs(1, -1)
-        check_for_bombs(-1, -1)
-def print_grid():
-    for square_y in range(grid_length):
-        print()
-        for square_x in range(grid_length):
-            if grid[square_y][square_x][2] == "unfound":
-                print(grid[square_y][square_x][1], end=" " + (max_len-len(grid[square_y][square_x][1]))*" ")
-            else:
-                print(grid[square_y][square_x][0], end="  " + (max_len-len(str(grid[square_y][square_x][0]))-1)*" ")
-print_grid()
+        if (tile_x + tile_y) % 2 == 0:
+            colour_list[tile_y].append(["#58803d", "#ded17e"])
+        else:
+            colour_list[tile_y].append(["#85c25d", "#a69c60"])
+
+def end_game(conditions):
+    if conditions == "win":
+        print("You won!")
+    else:
+        print("You lost!")
+
 def flood_fill():
     global flood_list, squares_left, game_over
     for cord in flood_list:
@@ -85,29 +55,89 @@ def flood_fill():
             add_to_fill([cord[0] - 1, cord[1] - 1])
     # update squares_left and reveal flood fill list
     for cord in flood_list:
-        if grid[cord[1]][cord[0]][2] != "found":
-            grid[cord[1]][cord[0]][2] = "found"
+        if grid[cord[1]][cord[0]][1] != "found":
+            grid[cord[1]][cord[0]][1] = "found"
             squares_left -= 1
             if squares_left == 0:
                 game_over = [True, "win"]
+                end_game(game_over[1])
         else:
             pass
-while not game_over[0]:
-    guess = input("\nguess: ").upper()
-    for tile_y in range(grid_length):
-        for tile_x in range(grid_length):
-            if guess == grid[tile_y][tile_x][1]:
-                if grid[tile_y][tile_x][0] != "X":
-                    grid[tile_y][tile_x][2] = "found"
-                    squares_left -= 1
-                    flood_list = [[tile_x, tile_y]]
-                    flood_fill()
-                else:
-                    grid[tile_y][tile_x][2] = "found"
-                    game_over = [True, "lose"]
-    print_grid()
 
-if game_over[1] == "win":
-    print("\nwin")
-else:
-    print("\nlose")
+def click_on_tile(x, y):
+    global flood_list, squares_left, game_over
+    squares_left -= 1
+    if grid[y][x][0] != "💣":
+        grid[y][x][1] = "found"
+        flood_list = [[x, y]]
+        flood_fill()
+        print_grid()
+    else:
+        grid[y][x][1] = "found"
+        game_over = [True, "lose"]
+        print_grid()
+
+def flagged(x, y):
+    print("Right clicked:", x, y)
+    click_type = "right"
+grid = []
+tile_list = []
+for tile_y in range(grid_length):
+    grid.append([])
+    tile_list.append([])
+    for tile_x in range(grid_length):
+        grid[tile_y].append([0, "unfound"])
+        new_tile = tk.Button(minesweeper_grid, background=colour_list[tile_y][tile_x][0], relief="flat", bd=0, font=("Segoe UI Symbol", 20), fg="white",
+                             command=lambda x=tile_x, y=tile_y: click_on_tile(x, y))
+        new_tile.bind("<Button-3>", lambda e, x=tile_x, y=tile_y: flagged(x, y))
+        new_tile.grid(row=tile_y, column=tile_x, sticky="nsew")
+        tile_list[tile_y].append(new_tile)
+        if tile_y == grid_length-1 and tile_x == grid_length-1:
+            #max len used for formatting
+            max_len = len(grid[tile_y][tile_x][1])
+        count += 1
+        cord_x += 1
+        if count % 26 == 0:
+            cord_y += 1
+            cord_x = 0
+tile_size = 70
+for i in range(grid_length):
+    minesweeper_grid.grid_rowconfigure(i, minsize=tile_size)
+    minesweeper_grid.grid_columnconfigure(i, minsize=tile_size)
+#assign bombs and numbers
+for tile in range(grid_length*grid_length):
+    bomb_x = randint(0, grid_length-1)
+    bomb_y = randint(0, grid_length-1)
+    if grid[bomb_y][bomb_x][0] != "💣":
+        grid[bomb_y][bomb_x][0] = "💣"
+        bomb_count -= 1
+    if bomb_count == 0:
+        break
+for tile_y in range(grid_length):
+    for tile_x in range(grid_length):
+        def check_for_bombs(idx_x, idx_y):
+            if 0 <= tile_x+idx_x < grid_length and 0 <= tile_y+idx_y < grid_length:
+                if grid[tile_y+idx_y][tile_x+idx_x][0] == "💣" and grid[tile_y][tile_x][0] != "💣":
+                    grid[tile_y][tile_x][0] += 1
+        #up, down, left, right
+        check_for_bombs(0, 1)
+        check_for_bombs(0, -1)
+        check_for_bombs(1, 0)
+        check_for_bombs(-1, 0)
+        #top left, top right, bottom left, bottom right
+        check_for_bombs(1, 1)
+        check_for_bombs(-1, 1)
+        check_for_bombs(1, -1)
+        check_for_bombs(-1, -1)
+number_colours = ["", "#3083f0", "#077007", "#ff2f00", "#4b02d1"]
+def print_grid():
+    for square_y in range(grid_length):
+        for square_x in range(grid_length):
+            if grid[square_y][square_x][1] == "found":
+                tile_list[square_y][square_x].configure(background=colour_list[square_y][square_x][1])
+                if grid[square_y][square_x][0] == "💣":
+                    tile_list[square_y][square_x].configure(text=grid[square_y][square_x][0], fg="black", bg="red")
+                if grid[square_y][square_x][0] != 0 and grid[square_y][square_x][0] != "💣":
+                    tile_list[square_y][square_x].configure(text=grid[square_y][square_x][0], fg=number_colours[grid[square_y][square_x][0]])
+print_grid()
+minesweeper_grid.mainloop()
