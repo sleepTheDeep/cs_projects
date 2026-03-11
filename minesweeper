@@ -8,6 +8,7 @@ cord_y = 1
 count = 0
 grid_length = None
 game_over = [False, ""]
+clicks = 0
 while grid_length is None:
     try:
         grid_length = int(input("Grid length: "))
@@ -26,15 +27,27 @@ for tile_y in range(grid_length):
     colour_list.append([])
     for tile_x in range(grid_length):
         if (tile_x + tile_y) % 2 == 0:
-            colour_list[tile_y].append(["#58803d", "#ded17e"])
+            colour_list[tile_y].append(["#58803d", "#a69c60"])
         else:
-            colour_list[tile_y].append(["#85c25d", "#a69c60"])
+            colour_list[tile_y].append(["#85c25d", "#ded17e"])
 
 def end_game(conditions):
+    end_window = tk.Toplevel(minesweeper_grid)
+    end_window.title("Game Over")
+    end_window.configure(bg="#85c25d")
+    end_label = tk.Label(end_window, font=("Arial", 40), bg="#85c25d")
+    end_label.grid(row=0, column=0)
+    end_button = tk.Button(end_window, text="Quit", font=("Arial", 30), bg="#58803d", relief="flat", bd=0, command=lambda: quit())
+    end_button.grid(row=1, column=0)
     if conditions == "win":
-        print("You won!")
+        end_label.configure(text=f"You win! | Number of tries: {clicks}")
     else:
-        print("You lost!")
+        for y in range(grid_length):
+            for x in range(grid_length):
+                if grid[y][x][0] == "💣":
+                    grid[y][x][1] = "found"
+        print_grid()
+        end_label.configure(text=f"You lost! | Number of tries: {clicks}")
 
 def flood_fill():
     global flood_list, squares_left, game_over
@@ -58,32 +71,36 @@ def flood_fill():
         if grid[cord[1]][cord[0]][1] != "found":
             grid[cord[1]][cord[0]][1] = "found"
             squares_left -= 1
-            if squares_left == 0:
+            if squares_left < 1:
                 game_over = [True, "win"]
                 end_game(game_over[1])
         else:
             pass
 
 def click_on_tile(x, y):
-    global flood_list, squares_left, game_over
+    global flood_list, squares_left, game_over, clicks
     squares_left -= 1
-    if grid[y][x][0] != "💣" and grid[y][x][1] != "flagged":
-        grid[y][x][1] = "found"
-        flood_list = [[x, y]]
-        flood_fill()
-        print_grid()
-    else:
-        grid[y][x][1] = "found"
-        game_over = [True, "lose"]
-        print_grid()
+    if grid[y][x][1] != "flagged":
+        clicks += 1
+        if grid[y][x][0] != "💣":
+            grid[y][x][1] = "found"
+            flood_list = [[x, y]]
+            flood_fill()
+            print_grid()
+            if squares_left < 1:
+                game_over = [True, "win"]
+                end_game(game_over[1])
+        else:
+            grid[y][x][1] = "found"
+            game_over = [True, "lose"]
+            end_game(game_over[0])
+            print_grid()
 
 def flagged(x, y):
-    #if grid[y][x][1] == "unfound":
     flagged_tile = grid[y][x][1]
     if flagged_tile == "unfound":
         grid[y][x][1] = "flagged"
         tile_list[y][x].configure(text="🚩", fg="red")
-        print(tile_list[y][x])
     if flagged_tile == "flagged":
         grid[y][x][1] = "unfound"
         tile_list[y][x].configure(text="")
@@ -146,5 +163,7 @@ def print_grid():
                     tile_list[square_y][square_x].configure(text=grid[square_y][square_x][0], fg="black", bg="red")
                 if grid[square_y][square_x][0] != 0 and grid[square_y][square_x][0] != "💣":
                     tile_list[square_y][square_x].configure(text=grid[square_y][square_x][0], fg=number_colours[grid[square_y][square_x][0]])
+                if grid[square_y][square_x][0] == 0:
+                    tile_list[square_y][square_x].configure(text="")
 print_grid()
 minesweeper_grid.mainloop()
