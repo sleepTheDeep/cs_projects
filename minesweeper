@@ -16,7 +16,7 @@ while grid_length is None:
 bomb_count = None
 while bomb_count is None:
     try:
-        bomb_count = int(input("Grid length: "))
+        bomb_count = int(input("Bombs amount: "))
         squares_left = grid_length*grid_length - bomb_count
     except ValueError:
         print("Enter a number GODDAMMIT!!")
@@ -41,7 +41,7 @@ def flood_fill():
     for cord in flood_list:
         def add_to_fill(idx):
             global grid_length
-            if idx not in flood_list and grid_length > idx[0] >= 0 and grid_length > idx[1] >= 0 and grid[idx[1]][idx[0]][0] != "X":
+            if idx not in flood_list and grid_length > idx[0] >= 0 and grid_length > idx[1] >= 0 and grid[idx[1]][idx[0]][0] != "X" and grid[idx[1]][idx[0]][1] != "flagged":
                 flood_list.append(idx)
         # flood fill
         if grid[cord[1]][cord[0]][0] == 0:
@@ -67,7 +67,7 @@ def flood_fill():
 def click_on_tile(x, y):
     global flood_list, squares_left, game_over
     squares_left -= 1
-    if grid[y][x][0] != "💣":
+    if grid[y][x][0] != "💣" and grid[y][x][1] != "flagged":
         grid[y][x][1] = "found"
         flood_list = [[x, y]]
         flood_fill()
@@ -78,8 +78,15 @@ def click_on_tile(x, y):
         print_grid()
 
 def flagged(x, y):
-    print("Right clicked:", x, y)
-    click_type = "right"
+    #if grid[y][x][1] == "unfound":
+    flagged_tile = grid[y][x][1]
+    if flagged_tile == "unfound":
+        grid[y][x][1] = "flagged"
+        tile_list[y][x].configure(text="🚩", fg="red")
+        print(tile_list[y][x])
+    if flagged_tile == "flagged":
+        grid[y][x][1] = "unfound"
+        tile_list[y][x].configure(text="")
 grid = []
 tile_list = []
 for tile_y in range(grid_length):
@@ -129,7 +136,7 @@ for tile_y in range(grid_length):
         check_for_bombs(-1, 1)
         check_for_bombs(1, -1)
         check_for_bombs(-1, -1)
-number_colours = ["", "#3083f0", "#077007", "#ff2f00", "#4b02d1"]
+number_colours = ["", "#3083f0", "#077007", "#ff2f00", "#4b02d1", "black", "black", "black", "black"]
 def print_grid():
     for square_y in range(grid_length):
         for square_x in range(grid_length):
