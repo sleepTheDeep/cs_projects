@@ -3,12 +3,14 @@ from random import randint
 
 minesweeper_grid = tk.Tk()
 minesweeper_grid.title("Minesweeper")
+minesweeper_grid.configure(bg="#1b4222")
 cord_x = 0
 cord_y = 1
 count = 0
 grid_length = None
 game_over = [False, ""]
 clicks = 0
+time = 0
 while grid_length is None:
     try:
         grid_length = int(input("Grid length: "))
@@ -19,6 +21,7 @@ while bomb_count is None:
     try:
         bomb_count = int(input("Bombs amount: "))
         squares_left = grid_length*grid_length - bomb_count
+        flag_count = bomb_count
     except ValueError:
         print("Enter a number GODDAMMIT!!")
 colour_list = []
@@ -30,25 +33,23 @@ for tile_y in range(grid_length):
             colour_list[tile_y].append(["#58803d", "#a69c60"])
         else:
             colour_list[tile_y].append(["#85c25d", "#ded17e"])
-
 def end_game(conditions):
     end_window = tk.Toplevel(minesweeper_grid)
     end_window.title("Game Over")
     end_window.configure(bg="#85c25d")
-    end_label = tk.Label(end_window, font=("Arial", 40), bg="#85c25d")
+    end_label = tk.Label(end_window, font=("Arial", 30), bg="#85c25d")
     end_label.grid(row=0, column=0)
-    end_button = tk.Button(end_window, text="Quit", font=("Arial", 30), bg="#58803d", relief="flat", bd=0, command=lambda: quit())
+    end_button = tk.Button(end_window, text="Quit", font=("Arial", 20), bg="#58803d", relief="flat", bd=0, command=lambda: quit())
     end_button.grid(row=1, column=0)
     if conditions == "win":
-        end_label.configure(text=f"You win! | Number of tries: {clicks}")
+        end_label.configure(text=f"You win! | Number of tries: {clicks} | Time taken: {time}")
     else:
         for y in range(grid_length):
             for x in range(grid_length):
                 if grid[y][x][0] == "💣":
                     grid[y][x][1] = "found"
         print_grid()
-        end_label.configure(text=f"You lost! | Number of tries: {clicks}")
-
+        end_label.configure(text=f"You lost! | Number of tries: {clicks} | Time taken: {time}")
 def flood_fill():
     global flood_list, squares_left, game_over
     for cord in flood_list:
@@ -76,7 +77,6 @@ def flood_fill():
                 end_game(game_over[1])
         else:
             pass
-
 def click_on_tile(x, y):
     global flood_list, squares_left, game_over, clicks
     squares_left -= 1
@@ -95,15 +95,21 @@ def click_on_tile(x, y):
             game_over = [True, "lose"]
             end_game(game_over[0])
             print_grid()
-
 def flagged(x, y):
+    global flag_count
     flagged_tile = grid[y][x][1]
     if flagged_tile == "unfound":
         grid[y][x][1] = "flagged"
         tile_list[y][x].configure(text="🚩", fg="red")
+        flag_count -= 1
+        display_label.configure(text=f"TIME ⏱️: {time} | FLAGS 🚩: {flag_count}")
     if flagged_tile == "flagged":
         grid[y][x][1] = "unfound"
         tile_list[y][x].configure(text="")
+        flag_count += 1
+        display_label.configure(text=f"TIME ⏱️: {time} | FLAGS 🚩: {flag_count}")
+display_label = tk.Label(bg="#1b4222", text=f"TIME ⏱️: {time} | FLAGS 🚩: {flag_count}", font=("Arial", grid_length*3))
+display_label.place(x=0, y=0)
 grid = []
 tile_list = []
 for tile_y in range(grid_length):
@@ -114,7 +120,7 @@ for tile_y in range(grid_length):
         new_tile = tk.Button(minesweeper_grid, background=colour_list[tile_y][tile_x][0], relief="flat", bd=0, font=("Segoe UI Symbol", 20), fg="white",
                              command=lambda x=tile_x, y=tile_y: click_on_tile(x, y))
         new_tile.bind("<Button-3>", lambda e, x=tile_x, y=tile_y: flagged(x, y))
-        new_tile.grid(row=tile_y, column=tile_x, sticky="nsew")
+        new_tile.grid(row=tile_y+1, column=tile_x, sticky="nsew")
         tile_list[tile_y].append(new_tile)
         if tile_y == grid_length-1 and tile_x == grid_length-1:
             #max len used for formatting
@@ -165,5 +171,12 @@ def print_grid():
                     tile_list[square_y][square_x].configure(text=grid[square_y][square_x][0], fg=number_colours[grid[square_y][square_x][0]])
                 if grid[square_y][square_x][0] == 0:
                     tile_list[square_y][square_x].configure(text="")
+def stop_watch():
+    global time
+    if not game_over[0]:
+        time += 1
+        minesweeper_grid.after(1000, stop_watch)
+        display_label.configure(text=f"TIME ⏱️: {time} | FLAGS 🚩: {flag_count}")
+stop_watch()
 print_grid()
 minesweeper_grid.mainloop()
