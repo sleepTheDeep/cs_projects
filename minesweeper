@@ -3,7 +3,7 @@ from random import randint
 
 minesweeper_grid = tk.Tk()
 minesweeper_grid.title("Minesweeper")
-minesweeper_grid.configure(bg="#1b4222")
+minesweeper_grid.configure(bg="dark gray")
 cord_x = 0
 cord_y = 1
 count = 0
@@ -79,18 +79,19 @@ def flood_fill():
             pass
 def click_on_tile(x, y):
     global flood_list, squares_left, game_over, clicks
-    squares_left -= 1
-    if grid[y][x][1] != "flagged":
+    if grid[y][x][1] != "flagged" and not game_over[0]:
+        if grid[y][x][1] != "found":
+            squares_left -= 1
         clicks += 1
         if grid[y][x][0] != "💣":
             grid[y][x][1] = "found"
             flood_list = [[x, y]]
             flood_fill()
             print_grid()
-            if squares_left < 1:
+            if squares_left < 1 and not game_over[0]:
                 game_over = [True, "win"]
                 end_game(game_over[1])
-        else:
+        if grid[y][x][0] == "💣" and not game_over[0]:
             grid[y][x][1] = "found"
             game_over = [True, "lose"]
             end_game(game_over[0])
@@ -108,7 +109,7 @@ def flagged(x, y):
         tile_list[y][x].configure(text="")
         flag_count += 1
         display_label.configure(text=f"TIME ⏱️: {time} | FLAGS 🚩: {flag_count}")
-display_label = tk.Label(bg="#1b4222", text=f"TIME ⏱️: {time} | FLAGS 🚩: {flag_count}", font=("Arial", grid_length*3))
+display_label = tk.Label(bg="dark gray", text=f"TIME ⏱️: {time} | FLAGS 🚩: {flag_count}", font=("Arial", grid_length*4))
 display_label.place(x=0, y=0)
 grid = []
 tile_list = []
@@ -117,7 +118,7 @@ for tile_y in range(grid_length):
     tile_list.append([])
     for tile_x in range(grid_length):
         grid[tile_y].append([0, "unfound"])
-        new_tile = tk.Button(minesweeper_grid, background=colour_list[tile_y][tile_x][0], relief="flat", bd=0, font=("Segoe UI Symbol", 20), fg="white",
+        new_tile = tk.Button(minesweeper_grid, background=colour_list[tile_y][tile_x][0], relief="flat", bd=0, font=("Arial Bold", 20), fg="white",
                              command=lambda x=tile_x, y=tile_y: click_on_tile(x, y))
         new_tile.bind("<Button-3>", lambda e, x=tile_x, y=tile_y: flagged(x, y))
         new_tile.grid(row=tile_y+1, column=tile_x, sticky="nsew")
@@ -131,9 +132,10 @@ for tile_y in range(grid_length):
             cord_y += 1
             cord_x = 0
 tile_size = 70
-for i in range(grid_length):
-    minesweeper_grid.grid_rowconfigure(i, minsize=tile_size)
-    minesweeper_grid.grid_columnconfigure(i, minsize=tile_size)
+for tile_y  in range(grid_length + 1):
+    for tile_x in range(grid_length):
+        minesweeper_grid.grid_rowconfigure(tile_y, minsize=tile_size)
+        minesweeper_grid.grid_columnconfigure(tile_x, minsize=tile_size)
 #assign bombs and numbers
 for tile in range(grid_length*grid_length):
     bomb_x = randint(0, grid_length-1)
