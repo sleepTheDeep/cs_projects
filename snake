@@ -25,8 +25,8 @@ def apple():
         snake_length += 1
         snake_dir.append(snake_dir[-1])
     def create_apple():
-        apple_x = ri(0, 18)
-        apple_y = ri(0, 18)
+        apple_x = ri(0, 17)
+        apple_y = ri(0, 17)
         if tile_list[apple_y][apple_x]["bg"] == "#386bc9":
             create_apple()
         else:
