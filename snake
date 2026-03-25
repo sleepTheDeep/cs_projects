@@ -3,16 +3,25 @@ from random import randint as ri
 snake_dir = [[0, 1], [0, 1]]
 snake_dir_append = [0, 1]
 snake_length = len(snake_dir)
+move_tick = True
 def key_pressed(event):
-    global snake_dir_append
-    if event.keysym == "Up" and snake_dir_append != [0, 1]:
-        snake_dir_append = [0, -1]
-    if event.keysym == "Down" and snake_dir_append != [0, -1]:
-        snake_dir_append = [0, 1]
-    if event.keysym == "Right" and snake_dir_append != [-1, 0]:
-        snake_dir_append = [1, 0]
-    if event.keysym == "Left" and snake_dir_append != [1, 0]:
-        snake_dir_append = [-1, 0]
+    global snake_dir_append, move_tick
+    def reset_tick():
+        global move_tick
+        game_window.after(120)
+        move_tick = True
+    if move_tick:
+        if event.keysym == ("Up" or "W") and snake_dir_append != [0, 1]:
+            snake_dir_append = [0, -1]
+        if event.keysym == ("Down" or "S") and snake_dir_append != [0, -1]:
+            snake_dir_append = [0, 1]
+        if event.keysym == ("Right" or "D") and snake_dir_append != [-1, 0]:
+            snake_dir_append = [1, 0]
+        if event.keysym == ("Left" or "A") and snake_dir_append != [1, 0]:
+            snake_dir_append = [-1, 0]
+        move_tick = False
+    reset_tick()
+    
 game_window = tk.Tk()
 game_window.title("Snake")
 game_window.bind("<Key>", key_pressed)
@@ -27,7 +36,7 @@ def apple():
     def create_apple():
         apple_x = ri(0, 17)
         apple_y = ri(0, 17)
-        if tile_list[apple_y][apple_x]["bg"] == "#386bc9":
+        if tile_list[apple_y][apple_x]["bg"] in ["#386bc9", "#2C5DB9", "#325AA3"]:
             create_apple()
         else:
             tile_list[apple_y][apple_x].configure(bg="red")
@@ -83,7 +92,7 @@ def snake(x, y, segments):
                     tile_list[y-cumulative_y][x-cumulative_x].configure(bg="#2C5DB9")
     else:
         quit()
-    game_window.after(150, lambda: snake(x+snake_dir[0][0], y+snake_dir[0][1], snake_length))
+    game_window.after(120, lambda: snake(x+snake_dir[0][0], y+snake_dir[0][1], snake_length))
 tile_list[9][9].configure(bg="#386bc9")
 apple()
 snake(9+snake_dir[0][0], 9+snake_dir[0][1], snake_length)
