@@ -50,23 +50,39 @@ def create_grid():
 create_grid()
 def snake(x, y, segments):
     global snake_dir, snake_dir_append, snake_length
+    face_pos = snake_dir[0]
     snake_dir.pop(-1)
     snake_dir.insert(0, snake_dir_append)
     if 0 <= y < 18 and 0 <= x < 18:
+        if tile_list[y][x]["bg"] in ["#386bc9", "#2C5DB9", "#325AA3"]:
+            quit()
         for old_y in range(18):
             for old_x in range(18):
-                if tile_list[old_y][old_x]["bg"] == "#386bc9":
-                    tile_list[old_y][old_x].configure(bg=colour_list[old_y][old_x])
+                if tile_list[old_y][old_x]["bg"] in ["#386bc9", "#2C5DB9", "#325AA3"]:
+                    tile_list[old_y][old_x].configure(bg=colour_list[old_y][old_x], text="")
         if tile_list[y][x]["bg"] == "red":
             apple()
-        tile_list[y][x].configure(bg="#386bc9")
+        if face_pos == [0, 1]:
+            face_text = "._."
+        if face_pos == [0, -1]:
+            face_text = ".-."
+        if face_pos == [1, 0]:
+            face_text = ":)"
+        if face_pos == [-1, 0]:
+            face_text = "(:"
+        tile_list[y][x].configure(bg="#386bc9", text=face_text)
         cumulative_x = 0
         cumulative_y = 0
         for segment in range(1, segments):
             cumulative_x += snake_dir[segment][0]
             cumulative_y += snake_dir[segment][1]
             if 0 <= y-cumulative_y < 18 and 0 <= x-cumulative_x < 18:
-                tile_list[y-cumulative_y][x-cumulative_x].configure(bg="#386bc9")
+                if segment % 2 == 0:
+                    tile_list[y-cumulative_y][x-cumulative_x].configure(bg="#325AA3")
+                else:
+                    tile_list[y-cumulative_y][x-cumulative_x].configure(bg="#2C5DB9")
+    else:
+        quit()
     game_window.after(150, lambda: snake(x+snake_dir[0][0], y+snake_dir[0][1], snake_length))
 tile_list[9][9].configure(bg="#386bc9")
 apple()
