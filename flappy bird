@@ -1,0 +1,72 @@
+import tkinter as tk
+from random import randint
+
+game_window = tk.Tk()
+game_window.title("Flappy Bird")
+game_window.configure(bg="dark gray")
+sky = "#4288d4"
+def flap(event):
+    global bird_pos
+    if event.keysym == "Up":
+        bird_pos -= 1
+        update_bird()
+game_window.bind("<Key>", flap)
+visual_grid = []
+row_length = 11
+column_length = 20
+tile_size = 40
+pipe_x = row_length-1
+pipe_UB = round(column_length*0.75)
+pipe_LB = round(column_length*0.25)
+pipe_gap = []
+score = 0
+def create_gap():
+    global pipe_gap
+    gap = randint(pipe_LB,pipe_UB)
+    pipe_gap = [gap, gap-1, gap-2, gap+1, gap+2]
+create_gap()
+def create_grid():
+    for tile_y in range(column_length):
+        visual_grid.append([])
+        for tile_x in range(row_length):
+            new_tile = tk.Button(bg=sky, relief="flat", bd=0)
+            new_tile.grid(row=tile_y, column=tile_x, sticky="nsew")
+            game_window.grid_rowconfigure(tile_y, minsize=tile_size)
+            game_window.grid_columnconfigure(tile_x, minsize=tile_size)
+            visual_grid[tile_y].append(new_tile)
+create_grid()
+visual_grid[0][round(row_length/2)-1].configure(text=score, fg="black")
+bird_pos = round(column_length/2)-1
+visual_grid[bird_pos][round(row_length/2)].configure(bg="yellow")
+def update_bird():
+    global bird_pos
+    if bird_pos >= column_length:
+        quit()
+    for y in range(column_length):
+        for x in range(row_length):
+            if visual_grid[y][x]["bg"] == "yellow":
+                visual_grid[y][x].configure(bg=sky)
+    visual_grid[bird_pos][round(row_length/2)-1].configure(bg="yellow")
+def game_tick():
+    global bird_pos, pipe_x, pipe_gap, score
+    bird_pos += 1
+    for y in range(column_length):
+        if pipe_x+1 < row_length and visual_grid[y][pipe_x+1]["bg"] != "yellow":
+            visual_grid[y][pipe_x+1].configure(bg=sky)
+        if y not in pipe_gap:
+            if visual_grid[y][pipe_x]["bg"] != "yellow":
+                visual_grid[y][pipe_x].configure(bg="green")
+            else:
+                quit()
+    if pipe_x == round(row_length/2)-2:
+        score += 1
+        visual_grid[0][round(row_length / 2) - 1].configure(text=score)
+    if pipe_x == 0:
+        create_gap()
+    if pipe_x < 0:
+        pipe_x = row_length-1
+    pipe_x -= 1
+    update_bird()
+    game_window.after(400, game_tick)
+game_tick()
+game_window.mainloop()
