@@ -1,0 +1,53 @@
+import random
+import tkinter as tk
+#world
+grid = tk.Tk()
+tiles = []
+seed = []
+#terrain generation modifiers
+map_size = 40
+dirt_layer = 5
+sky_level = 6
+#colours
+grass_colour = "green"
+dirt_colour = "brown"
+sky_colour = "light blue"
+stone_colour = "gray"
+#generate noise map
+heights = []
+for x in range(map_size):
+    freq = []
+    for n in range(6):
+        freq.append(round(random.randint(random.randint(1, 2), 4)/10, 2))
+    height_1 = 0
+    for n in range(len(freq)):
+        height_1 += round(random.randint(1, random.randint(1, 20))*freq[n])
+    height_1 /= 5
+    height = round(height_1)
+    heights.append(height + dirt_layer)
+# make tiles
+map_height = max(heights) + sky_level
+for y in range(map_height):
+    tiles.append([])
+    for x in range(map_size):
+        # determine tile type
+        if y == heights[x] - 1:
+            colour = grass_colour
+        elif heights[x] - dirt_layer < y < heights[x] - 1:
+            colour = dirt_colour
+        elif y > heights[x] - 1:
+            colour = sky_colour
+        else:
+            colour = stone_colour
+        seed.append([x, y, colour])
+        # Create pixel
+        new_tile = tk.Button(grid, bg="white", relief="flat", bd=0)
+        new_tile.grid(row=y, column=x, sticky="nsew")
+        grid.grid_rowconfigure(y, minsize=20)
+        grid.grid_columnconfigure(x, minsize=20)
+        tiles[y].append(new_tile)
+#flip tiles right way around
+for x, y, colour in seed:
+    tiles[map_height-y-1][map_size-x-1].configure(bg=colour)
+#start game
+grid.mainloop()
