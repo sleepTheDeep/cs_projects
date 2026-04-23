@@ -1,13 +1,39 @@
 import random
 import tkinter as tk
 #world
+def scroll_map(event):
+    global p_pos, tick
+    if not tick:
+        tick = True
+        if event.keysym == "Right" and 0 <= p_pos <= map_size-p_view-1:
+            p_pos += 1
+        else:
+            p_pos -= 1
+        if event.keysym == "Left" and 1 <= p_pos <= map_size-p_view-1:
+            p_pos -= 1
+        else:
+            p_pos += 1
+        for tile_y in range(map_height):
+            for tile_x in range(p_view):
+                world_x = tile_x + p_pos
+                if world_x < map_size:
+                    tiles[tile_y][tile_x].configure(bg=seed[map_height - tile_y - 1][world_x])
+        def reset_tick():
+            global tick
+            tick = False
+        grid.after(delay, reset_tick)
 grid = tk.Tk()
+grid.bind("<Key>", scroll_map)
 tiles = []
 seed = []
 #terrain generation modifiers
-map_size = 40
+map_size = 200
+p_view = 20
 dirt_layer = 5
 sky_level = 6
+p_pos = map_size-p_view-2
+delay = 240
+tick = False
 #colours
 grass_colour = "green"
 dirt_colour = "brown"
@@ -18,17 +44,19 @@ heights = []
 for x in range(map_size):
     freq = []
     for n in range(6):
-        freq.append(round(random.randint(random.randint(1, 2), 4)/10, 2))
+        freq.append(round(random.randint(random.randint(1, 4), 8)/10, 2))
     height_1 = 0
     for n in range(len(freq)):
         height_1 += round(random.randint(1, random.randint(1, 20))*freq[n])
     height_1 /= 5
     height = round(height_1)
     heights.append(height + dirt_layer)
+    heights.append(height + dirt_layer)
 # make tiles
 map_height = max(heights) + sky_level
 for y in range(map_height):
     tiles.append([])
+    seed.append([])
     for x in range(map_size):
         # determine tile type
         if y == heights[x] - 1:
@@ -39,15 +67,19 @@ for y in range(map_height):
             colour = sky_colour
         else:
             colour = stone_colour
-        seed.append([x, y, colour])
+            ores = ["#bebf9f", "#33cc78", "#5596e6", "#1a1b1c", "#ba9556"]
+            ore = random.randint(0, len(ores)*35)
+            if 0 <= ore < len(ores):
+                colour = ores[ore]
+        seed[y].append(colour)
+#flip tiles right way around
+for y in range(map_height):
+    for x in range(p_view):
         # Create pixel
         new_tile = tk.Button(grid, bg="white", relief="flat", bd=0)
         new_tile.grid(row=y, column=x, sticky="nsew")
         grid.grid_rowconfigure(y, minsize=20)
         grid.grid_columnconfigure(x, minsize=20)
         tiles[y].append(new_tile)
-#flip tiles right way around
-for x, y, colour in seed:
-    tiles[map_height-y-1][map_size-x-1].configure(bg=colour)
 #start game
 grid.mainloop()
